@@ -11,11 +11,15 @@ withdots(f)
 \link{primitive}.}
 }
 \value{
-If \code{f} has \code{\link[=dots]{...}} in it argument list, then \code{f}. Otherwise, a
-\link{closure}: a tweaked version of \code{f}, whose only difference is that
-\code{\link[=dots]{...}} has been added to the end of its \code{\link[=formals]{formals()}}, and any
-\code{\link{srcref}} \code{\link[=attr]{attribute}} has been removed (see \strong{Why the \code{\link{srcref}}
-\code{\link[=attr]{attribute}} is removed} below).
+If \code{f} has \code{\link[=dots]{...}} in its \code{\link{args}}, then \code{f}.
+
+Otherwise, a \link{closure}: a tweaked version of \code{f}, whose only differences
+are:
+\enumerate{
+\item \code{\link[=dots]{...}} has been appended to the end of its \code{\link{formals}}, and
+\item any \code{\link{srcref}} \code{\link[=attr]{attribute}} has been removed (see \strong{Why the
+\code{\link{srcref}} \code{\link[=attr]{attribute}} is removed} below).
+}
 }
 \description{
 Adds \code{\link[=dots]{...}} to a \link{closure}'s \code{\link{args}} if it does not have it already.
@@ -26,13 +30,15 @@ changes. Otherwise, \code{\link[=dots]{...}} is added to \code{f}'s \link{formal
 returned. See \strong{Handling of \link{primitive}s} below.
 }
 \section{How \code{\link[=dots]{...}} is added to \link{closure}s}{
-
+ These are the steps that
+\code{withdots()} takes \strong{only} if \code{f} is a \link{closure} without \code{\link[=dots]{...}} in
+its \code{\link{formals}}:
 \enumerate{
-\item First, \code{\link{attributes}}\code{(f)} are temporarily saved and set aside.
+\item \code{\link{attributes}}\code{(f)} are temporarily saved and set aside.
 \item If there is a \code{\link{srcref}} \code{\link[=attr]{attribute}} among the set-aside
 \code{\link{attributes}}\code{(f)}, it is removed (see \strong{Why the \code{\link{srcref}}
 \code{\link[=attr]{attribute}} is removed} below).
-\item \code{\link[=dots]{...}} is added to the \code{\link[=formals]{formals()}} of \code{f} using \code{\link{formals<-}}.
+\item \code{\link[=dots]{...}} is added to the \code{\link{formals}} of \code{f} using \code{\link{formals<-}}.
 \item The remaining set-aside \code{\link{attributes}} are added back to \code{f} with
 \code{\link{attributes<-}}.
 \item \code{f} is returned.
@@ -53,62 +59,97 @@ resulting \link{closure} may be different from what is expected, since
 }
 
 \section{Why the \code{\link{srcref}} \code{\link[=attr]{attribute}} is removed}{
- Typically,
-\link{function}s created with \code{\link[=function]{function()}} have a \code{\link{srcref}}
+ Many
+\link{function}s---including those created with \code{\link[=function]{function()}}---have a \code{\link{srcref}}
 \code{\link[=attr]{attribute}}. When a \link{function} is \link{print}ed, \code{\link[=print.function]{print.function()}}
-relies on this \code{\link[=attr]{attribute}} to depict the \link{function}'s \link{formals} and
-\link{body}.
+relies on this \code{\link[=attr]{attribute}} by default to depict the \link{function}'s
+\link{formals} and \link{body}.
 
 \code{withdots()} adds \code{\link[=dots]{...}} via \code{\link{formals<-}}, which expressly drops
 \code{\link{attributes}} (see its \link[=formals<-]{documentation page}). To prevent this
-loss, \code{withdots()} sets \code{\link{attributes}}\code{(f)} aside and re-attaches them to
-\code{f} at the end. Normally, this would re-attach the original \code{f}'s
-\code{\link{srcref}} \code{\link[=attr]{attribute}} to the new \code{f}, making it so that the new
-\code{\link[=dots]{...}} would not be depicted when the new \code{f} is \link{print}ed. For this
-reason, the old \code{\link{srcref}} \code{\link[=attr]{attribute}} is dropped, and only the
-remaining \code{\link{attributes}} are re-attached.
+loss, \code{withdots()} sets \code{\link{attributes}}\code{(f)} aside at the beginning and
+re-attaches them to \code{f} at the end. Normally, this would re-attach the
+original \code{f}'s \code{\link{srcref}} \code{\link[=attr]{attribute}} to the new \code{f}, making it so
+that the newly added \code{\link[=dots]{...}} would not be depicted when the new \code{f}
+is \link{print}ed. For this reason, the old \code{\link{srcref}} \code{\link[=attr]{attribute}} is
+dropped, and only the remaining \code{\link{attributes}} are re-attached to the new
+\code{f}.
 
 Observe what would happen during \link{print}ing if \strong{all} original
 \code{\link{attributes}}\code{(f)} were naively added to the modified \code{f}:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{naive_withdots <- function(f) \{
-  old_attributes <- attributes(f)
-  formals(f)[["..."]] <- quote(expr = )
-  attributes(f) <- old_attributes
-  f
-\}
-
-# Create a function with no dots:
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Create a function with no dots:
 foo <- function(a = 1) \{
   # Helpful comment
   a
 \}
 
-# Add dots:
-foo <- naive_withdots(foo)
+# Give it important attributes that we can't afford to lose:
+attr(foo, "important_attribute") <- "crucial information"
+class(foo) <- "very_special_function"
 
-# When printed, its dots are not depicted:
+# Print foo, which also prints its important attributes:
 foo
 #> function(a = 1) \{
 #>   # Helpful comment
 #>   a
 #> \}
-#> <environment: 0x60ce918>
+#> <environment: 0x5171448>
+#> attr(,"important_attribute")
+#> [1] "crucial information"
+#> attr(,"class")
+#> [1] "very_special_function"
 
-# ...but the actual function definitely has dots, since it can handle
+# Save its attributes:
+old_attributes <- attributes(foo)
+
+# Add dots:
+formals(foo)[["..."]] <- quote(expr = )
+
+# See that the important attributes have been dropped:
+foo
+#> function (a = 1, ...) 
+#> \{
+#>     a
+#> \}
+#> <environment: 0x5171448>
+
+# Add the attributes back:
+attributes(foo) <- old_attributes
+
+# Print it again, and we see that the attributes have returned.
+# However, the ... disappears from the argument list.
+foo
+#> function(a = 1) \{
+#>   # Helpful comment
+#>   a
+#> \}
+#> <environment: 0x5171448>
+#> attr(,"important_attribute")
+#> [1] "crucial information"
+#> attr(,"class")
+#> [1] "very_special_function"
+
+# We know the actual function definitely has dots, since it can handle
 # extraneous arguments:
 foo(1, 2, junk, "arguments", NULL)
 #> [1] 1
 
-# Remove the "srcref" attribute and, the function is printed accurately:
+# Remove the "srcref" attribute, and the function is printed accurately.
+# Furthermore, its important attributes are intact:
 attr(foo, "srcref") <- NULL
 foo
 #> function (a = 1, ...) 
 #> \{
 #>     a
 #> \}
-#> <environment: 0x60ce918>
-# Success, although the comments in the body() of the function are lost.
+#> <environment: 0x5171448>
+#> attr(,"important_attribute")
+#> [1] "crucial information"
+#> attr(,"class")
+#> [1] "very_special_function"
+
+# Success (although the comments in the body() of the function are lost)
 }\if{html}{\out{</div>}}
 }
 

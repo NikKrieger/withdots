@@ -7,15 +7,17 @@
 #' changes. Otherwise, [`...`][dots] is added to `f`'s [formals] and then `f` is
 #' returned. See **Handling of [primitive]s** below.
 #'
-#' @section How [`...`][dots] is added to [closure]s:
+#' @section How [`...`][dots] is added to [closure]s: These are the steps that
+#'   `withdots()` takes **only** if `f` is a [closure] without [`...`][dots] in
+#'   its [`formals`]:
 #'
-#'   1. First, [`attributes`]`(f)` are temporarily saved and set aside.
+#'   1. [`attributes`]`(f)` are temporarily saved and set aside.
 #'
 #'   1. If there is a [`srcref`] [`attribute`][attr] among the set-aside
 #'   [`attributes`]`(f)`, it is removed (see **Why the [`srcref`]
 #'   [`attribute`][attr] is removed** below).
 #'
-#'   1. [`...`][dots] is added to the [formals()] of `f` using [`formals<-`].
+#'   1. [`...`][dots] is added to the [`formals`] of `f` using [`formals<-`].
 #'
 #'   1. The remaining set-aside [`attributes`] are added back to `f` with
 #'   [`attributes<-`].
@@ -33,62 +35,79 @@
 #'   resulting [closure] may be different from what is expected, since
 #'   [primitive]s may use nonstandard argument matching.**
 #'
-#' @section Why the [`srcref`] [`attribute`][attr] is removed: Typically,
-#'   [function]s created with [function()] have a [`srcref`]
+#' @section Why the [`srcref`] [`attribute`][attr] is removed: Many
+#'   [function]s---including those created with [function()]---have a [`srcref`]
 #'   [`attribute`][attr]. When a [function] is [print]ed, [print.function()]
-#'   relies on this [`attribute`][attr] to depict the [function]'s [formals] and
-#'   [body].
+#'   relies on this [`attribute`][attr] by default to depict the [function]'s
+#'   [formals] and [body].
 #'
 #'   `withdots()` adds [`...`][dots] via [`formals<-`], which expressly drops
 #'   [`attributes`] (see its [documentation page][formals<-]). To prevent this
-#'   loss, `withdots()` sets [`attributes`]`(f)` aside and re-attaches them to
-#'   `f` at the end. Normally, this would re-attach the original `f`'s
-#'   [`srcref`] [`attribute`][attr] to the new `f`, making it so that the new
-#'   [`...`][dots] would not be depicted when the new `f` is [print]ed. For this
-#'   reason, the old [`srcref`] [`attribute`][attr] is dropped, and only the
-#'   remaining [`attributes`] are re-attached.
+#'   loss, `withdots()` sets [`attributes`]`(f)` aside at the beginning and
+#'   re-attaches them to `f` at the end. Normally, this would re-attach the
+#'   original `f`'s [`srcref`] [`attribute`][attr] to the new `f`, making it so
+#'   that the newly added [`...`][dots] would not be depicted when the new `f`
+#'   is [print]ed. For this reason, the old [`srcref`] [`attribute`][attr] is
+#'   dropped, and only the remaining [`attributes`] are re-attached to the new
+#'   `f`.
 #'
 #'   Observe what would happen during [print]ing if **all** original
 #'   [`attributes`]`(f)` were naively added to the modified `f`:
 #'
 #'   ```{r naive_withdots}
-#'   naive_withdots <- function(f) {
-#'     old_attributes <- attributes(f)
-#'     formals(f)[["..."]] <- quote(expr = )
-#'     attributes(f) <- old_attributes
-#'     f
-#'   }
-#'
 #'   # Create a function with no dots:
 #'   foo <- function(a = 1) {
 #'     # Helpful comment
 #'     a
 #'   }
 #'
-#'   # Add dots:
-#'   foo <- naive_withdots(foo)
+#'   # Give it important attributes that we can't afford to lose:
+#'   attr(foo, "important_attribute") <- "crucial information"
+#'   class(foo) <- "very_special_function"
 #'
-#'   # When printed, its dots are not depicted:
+#'   # Print foo, which also prints its important attributes:
 #'   foo
 #'
-#'   # ...but the actual function definitely has dots, since it can handle
+#'   # Save its attributes:
+#'   old_attributes <- attributes(foo)
+#'
+#'   # Add dots:
+#'   formals(foo)[["..."]] <- quote(expr = )
+#'
+#'   # See that the important attributes have been dropped:
+#'   foo
+#'
+#'   # Add the attributes back:
+#'   attributes(foo) <- old_attributes
+#'
+#'   # Print it again, and we see that the attributes have returned.
+#'   # However, the ... disappears from the argument list.
+#'   foo
+#'
+#'   # We know the actual function definitely has dots, since it can handle
 #'   # extraneous arguments:
 #'   foo(1, 2, junk, "arguments", NULL)
 #'
-#'   # Remove the "srcref" attribute and, the function is printed accurately:
+#'   # Remove the "srcref" attribute, and the function is printed accurately.
+#'   # Furthermore, its important attributes are intact:
 #'   attr(foo, "srcref") <- NULL
 #'   foo
-#'   # Success, although the comments in the body() of the function are lost.
+#'
+#'   # Success (although the comments in the body() of the function are lost)
 #'   ```
 #'
 #' @param f A [function]. See **Handling of [primitive]s** in case `f` is
 #'   [primitive].
 #'
-#' @return If `f` has [`...`][dots] in it argument list, then `f`. Otherwise, a
-#'   [closure]: a tweaked version of `f`, whose only difference is that
-#'   [`...`][dots] has been added to the end of its [formals()], and any
-#'   [`srcref`] [`attribute`][attr] has been removed (see **Why the [`srcref`]
-#'   [`attribute`][attr] is removed** below).
+#' @return If `f` has [`...`][dots] in its [`args`], then `f`.
+#'
+#'   Otherwise, a [closure]: a tweaked version of `f`, whose only differences
+#'   are:
+#'
+#'   1. [`...`][dots] has been appended to the end of its [`formals`], and
+#'
+#'   1. any [`srcref`] [`attribute`][attr] has been removed (see **Why the
+#'   [`srcref`] [`attribute`][attr] is removed** below).
 #'
 #' @examples
 #' # The base::match() function has no ... and can't handle extraneous arguments
