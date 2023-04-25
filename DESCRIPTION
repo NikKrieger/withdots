@@ -1,11 +1,11 @@
-Package: withdots
 Type: Package
-Title: Put `...` in a Function's Argument List
+Package: withdots
+Title: Put `...` in a Function's `args`
 Version: 0.1.0
 Author: Nik Krieger
 Maintainer: Nik Krieger <nk@case.edu>
-Description: Adds `...` to the formal arguments of functions that don't
-    have it so that they can tolerate non-matching arguments.
+Description: Adds `...` to a function's `args` so that it can tolerate
+    non-matching arguments.
 License: MIT + file LICENSE
 Suggests:
     rlang
