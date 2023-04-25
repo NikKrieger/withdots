@@ -1,0 +1,158 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# withdots
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The `withdots()` function adds `...` to the argument list of a function if it does not already have it. This lets the function tolerate extraneous arguments that are passed to it.
+
+## Installation
+
+You can install the development version of withdots like so:
+
+``` r
+remotes::install_github("NikKrieger/withdots")
+```
+
+## Demo
+
+The base R function `match()` has no `...` in its argument list:
+
+```{r match}
+match
+```
+
+Therefore, it can't handle extraneous arguments:
+
+```{r error_match, error=TRUE}
+match("z", letters, bad_arg = "error!")
+```
+
+But if we give it dots, then it can:
+
+```{r wd}
+library(withdots)
+
+match_with_dots <- withdots(match)
+
+match_with_dots("z", letters, can_now_handle = "junk arguments")
+```
+
+Functions that already have `...` in their argument list are returned as is:
+
+```{r lapply}
+lapply
+withdots(lapply)
+```
+
+```{r sum_wd}
+c
+withdots(c)
+```
+
+## Notes
+
+### A note about `primitive` functions
+
+If a function is primitive (see `?primitive`) and it has `...` in its argument list (e.g., `c()`, `sum()`, `as.character()`), it is returned as is. If the primitive function does not have `...` in its argument list, an error is thrown.
+
+The user can bypass this by pre-processing the function with `rlang::as_closure()`. Observe:
+
+```{r round}
+# Observe that round() is a primitive function with no ... in its arg list:
+round
+```
+
+```{r, rounderror, error=TRUE}
+# So, we can't pass it to withdots() as is:
+withdots(round)
+```
+
+```{r round_with_dots}
+# But if we turn it into a closure, we can give it dots:
+library(rlang)
+
+round <- withdots(as_closure(round))
+
+round
+```
+
+```{r round3}
+# And now it can handle extraneous arguments:
+round(45.78, digits = 1, junk, arguments)
+```
+
+**However**, keep in mind that the argument matching behavior of the result **_may_** be different from what is expected, since each primitive is special and **_may_** use nonstandard argument matching.
+
+### The `srcref` `attribute`. 
+
+Many functions---including those created with `function()`---have a `srcref` `attribute`. When a function is `print`ed, `print.function()` relies on this `attribute` by default to depict the function's `formals` and `body`.
+
+`withdots()` adds `...` via `formals<-`, which expressly drops `attributes` (see ``?`formals<-` ``. To prevent this loss, `withdots()` sets the function's `attributes` aside at the beginning and re-attaches them to at the end. Normally, this would re-attach the original function's `srcref` `attribute` to the new function, making it so that the newly added `...` would not be depicted when the new function is `print`ed. For this reason, the old `srcref` `attribute` is dropped, and only the remaining `attributes` are re-attached to the new function.
+
+Observe what would happen during `print`ing if **all** original `attributes` were naively added to the modified function:
+
+```{r naive_withdots1}
+# Create a function with no dots:
+foo <- function(a = 1) {
+  # Helpful comment
+  a
+}
+
+# Give it important attributes that we can't afford to lose:
+attr(foo, "important_attribute") <- "crucial information"
+class(foo) <- "very_special_function"
+
+# Print foo, which also prints its important attributes:
+foo
+```
+
+```{r naive2}
+# Save its attributes:
+old_attributes <- attributes(foo)
+
+# Add dots:
+formals(foo)[["..."]] <- quote(expr = )
+
+# See that the important attributes have been dropped:
+foo
+```
+
+```{r naive3}
+# Add the attributes back:
+attributes(foo) <- old_attributes
+
+# Print it again, and we see that the attributes have returned.
+# However, the ... disappears from the argument list.
+foo
+```
+
+```{r naive4}
+# We know the actual function definitely has dots, since it can handle
+# extraneous arguments:
+foo(1, 2, junk, "arguments", NULL)
+```
+
+```{r naive5}
+# Remove the "srcref" attribute, and the function is printed accurately.
+# Furthermore, its important attributes are intact:
+attr(foo, "srcref") <- NULL
+foo
+```
+
+Success! However, the comments in the `body()` of the function are lost. Even so, this is better than inaccurate `print`ing.
+
