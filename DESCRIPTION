@@ -1,7 +1,7 @@
 Type: Package
 Package: withdots
 Title: Put `...` in a Function's Argument List
-Version: 0.1.0
+Version: 0.1.0.9000
 Author: Nik Krieger
 Maintainer: Nik Krieger <nk@case.edu>
 Description: Adds `...` to a function's argument list so that it can tolerate

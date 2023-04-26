@@ -26,7 +26,7 @@ The base R function `match()` has no `...` in its argument list:
 match
 #> function (x, table, nomatch = NA_integer_, incomparables = NULL) 
 #> .Internal(match(x, table, nomatch, incomparables))
-#> <bytecode: 0x3fa01c0>
+#> <bytecode: 0x2646880>
 #> <environment: namespace:base>
 ```
 
@@ -62,13 +62,19 @@ identical(c, withdots(c))
 
 ### A note about primitive functions
 
-If a function is primitive (see `?primitive`) and it has `...` in its
-argument list (e.g., `c()`, `sum()`, `as.character()`), it is returned
-as is. If the primitive function does not have `...` in its argument
-list, an error is thrown.
+If a function is a primitive function (see `?primitive`) with a
+well-defined argument list containing `...` (e.g., `c()`, `sum()`,
+`as.character()`), then `withdots()` will return it as is. The test for
+a “well-defined argument list,” given a function `fn`, is
+`is.function(args(fn))`.
 
-The user can bypass this by pre-processing the function with
-`rlang::as_closure()`. Observe:
+#### primitive functions with well-defined argument lists not containing `...`
+
+If the primitive has a well-defined argument list that does not contain
+`...` (e.g., `round()`, `is.na()`, `sqrt()`), then `withdots()` throws
+an error. To bypass this, all of these functions can be pre-processed
+with `rlang::as_closure()`, whose result can be then passed to
+`withdots()`. Observe:
 
 ``` r
 # Observe that round() is a primitive function with no ... in its arg list:
@@ -79,8 +85,9 @@ round
 ``` r
 # So, we can't pass it to withdots() as is:
 withdots(round)
-#> Error: f cannot be a primitive function with no dots in its args().
-#> Consider passing to rlang::as_closure() first
+#> Error: f must be a closure (non-primitive) or a primitive with a
+#> well-defined argument list that already contains ...
+#> Consider passing f to rlang::as_closure() first.
 ```
 
 ``` r
@@ -101,8 +108,52 @@ round(45.78, digits = 1, junk, arguments)
 ```
 
 **However**, keep in mind that the argument matching behavior of the
-result ***may*** be different from what is expected, since each
-primitive is special and ***may*** use nonstandard argument matching.
+result ***may*** be different from what is expected, since primitives
+***may*** use nonstandard argument matching.
+
+#### Primitive functions without well-defined argument lists
+
+If the primitive function does not have a well-defined argument list
+(e.g., `[`, `~`, `function`, `for`), then `withdots()` throws an error.
+**Some** of these functions can be pre-processed with
+`rlang::as_closure()`, whose result definitely can be passed to
+`withdots()`. They are:
+
+``` r
+all_base <- getNamespaceExports("base")
+all_base <- setNames(nm = all_base)
+all_base <- lapply(all_base, function(x) getExportedValue("base", x))
+all_primitives <- Filter(is.primitive, all_base)
+
+primitive_non_well_defined_args <-
+  Filter(function(fn) !is.function(args(fn)), all_primitives)
+
+as_closure_coercible <-
+  Filter(
+    function(fn) tryCatch({as_closure(fn); TRUE}, error = function(e) FALSE),
+    primitive_non_well_defined_args
+  )
+
+names(as_closure_coercible)
+#>  [1] "$"    "("    ":"    "="    "@"    "["    "{"    "~"    "&&"   "<-"  
+#> [11] "[["   "||"   "[[<-" "$<-"  "<<-"  "@<-"  "[<-"
+```
+
+However, there are a handful of primitives that `rlang::as_closure()` is
+unwilling to process and are therefore ineligible for `withdots()`. They
+are:
+
+``` r
+as_closure_noncoercible <-
+  Filter(
+    function(fn) tryCatch({as_closure(fn); FALSE}, error = function(e) TRUE),
+    primitive_non_well_defined_args
+  )
+  
+names(as_closure_noncoercible)
+#> [1] "if"       "function" "repeat"   "for"      "break"    "return"   "next"    
+#> [8] "while"
+```
 
 ### The `srcref` `attribute`.
 
@@ -114,12 +165,11 @@ this `attribute` by default to depict the function’s `formals` and
 `withdots()` adds `...` via `formals<-`, which expressly drops
 `attributes` (see `` ?`formals<-` ``). To prevent this loss,
 `withdots()` sets the function’s `attributes` aside at the beginning and
-re-attaches them to at the end. Normally, this would re-attach the
-original function’s `srcref` `attribute` to the new function, making it
-so that the newly added `...` would not be depicted when the new
-function is `print`ed. For this reason, the old `srcref` `attribute` is
-dropped, and only the remaining `attributes` are re-attached to the new
-function.
+re-attaches them at the end. Normally, this would re-attach the original
+function’s `srcref` `attribute` to the new function, making it so that
+the newly added `...` would not be depicted when the new function is
+`print`ed. For this reason, the old `srcref` `attribute` is dropped, and
+only the remaining `attributes` are re-attached to the new function.
 
 Observe what would happen during `print`ing if **all** original
 `attributes` were naively added to the modified function:

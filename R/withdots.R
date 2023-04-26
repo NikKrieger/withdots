@@ -129,12 +129,14 @@ withdots <- function(f) {
   }
 
   if (is.primitive(f)) {
-    if (any(names(formals(args(f))) == "...")) {
-      return(f)
+    args_fn <- args(f)
+    if (!is.function(args_fn) || !any(names(formals(args_fn)) == "...")) {
+      stop("f must be a closure (non-primitive) or a primitive with a",
+           "\nwell-defined argument list that already contains ...",
+           "\nConsider passing f to rlang::as_closure() first.",
+           call. = FALSE)
     }
-    stop("f cannot be a primitive function with no dots in its args().",
-         "\nConsider passing to rlang::as_closure() first",
-         call. = FALSE)
+    return(f)
   }
 
   if (any(names(formals(f)) == "...")) {
