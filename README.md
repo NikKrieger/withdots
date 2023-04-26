@@ -26,7 +26,7 @@ The base R function `match()` has no `...` in its argument list:
 match
 #> function (x, table, nomatch = NA_integer_, incomparables = NULL) 
 #> .Internal(match(x, table, nomatch, incomparables))
-#> <bytecode: 0x3413c38>
+#> <bytecode: 0x3fa01c0>
 #> <environment: namespace:base>
 ```
 
@@ -52,38 +52,15 @@ Functions that already have `...` in their argument list are returned as
 is:
 
 ``` r
-lapply
-#> function (X, FUN, ...) 
-#> {
-#>     FUN <- match.fun(FUN)
-#>     if (!is.vector(X) || is.object(X)) 
-#>         X <- as.list(X)
-#>     .Internal(lapply(X, FUN))
-#> }
-#> <bytecode: 0x189ecb8>
-#> <environment: namespace:base>
-withdots(lapply)
-#> function (X, FUN, ...) 
-#> {
-#>     FUN <- match.fun(FUN)
-#>     if (!is.vector(X) || is.object(X)) 
-#>         X <- as.list(X)
-#>     .Internal(lapply(X, FUN))
-#> }
-#> <bytecode: 0x189ecb8>
-#> <environment: namespace:base>
-```
-
-``` r
-c
-#> function (...)  .Primitive("c")
-withdots(c)
-#> function (...)  .Primitive("c")
+identical(lapply, withdots(lapply))
+#> [1] TRUE
+identical(c, withdots(c))
+#> [1] TRUE
 ```
 
 ## Notes
 
-### A note about `primitive` functions
+### A note about primitive functions
 
 If a function is primitive (see `?primitive`) and it has `...` in its
 argument list (e.g., `c()`, `sum()`, `as.character()`), it is returned
@@ -135,13 +112,14 @@ this `attribute` by default to depict the function’s `formals` and
 `body`.
 
 `withdots()` adds `...` via `formals<-`, which expressly drops
-`attributes` (see `` ?`formals<-` ``. To prevent this loss, `withdots()`
-sets the function’s `attributes` aside at the beginning and re-attaches
-them to at the end. Normally, this would re-attach the original
-function’s `srcref` `attribute` to the new function, making it so that
-the newly added `...` would not be depicted when the new function is
-`print`ed. For this reason, the old `srcref` `attribute` is dropped, and
-only the remaining `attributes` are re-attached to the new function.
+`attributes` (see `` ?`formals<-` ``). To prevent this loss,
+`withdots()` sets the function’s `attributes` aside at the beginning and
+re-attaches them to at the end. Normally, this would re-attach the
+original function’s `srcref` `attribute` to the new function, making it
+so that the newly added `...` would not be depicted when the new
+function is `print`ed. For this reason, the old `srcref` `attribute` is
+dropped, and only the remaining `attributes` are re-attached to the new
+function.
 
 Observe what would happen during `print`ing if **all** original
 `attributes` were naively added to the modified function:
@@ -221,7 +199,7 @@ foo
 #> [1] "crucial information"
 #> attr(,"class")
 #> [1] "very_special_function"
-```
 
-Success! However, the comments in the `body()` of the function are lost.
-Even so, this is better than inaccurate `print`ing.
+# Success! However, the comments in the body of the function are lost.
+# Even so, this is better than inaccurate `print`ing.
+```

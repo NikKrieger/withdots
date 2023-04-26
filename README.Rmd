@@ -54,19 +54,14 @@ match_with_dots("z", letters, can_now_handle = "junk arguments")
 
 Functions that already have `...` in their argument list are returned as is:
 
-```{r lapply}
-lapply
-withdots(lapply)
-```
-
-```{r sum_wd}
-c
-withdots(c)
+```{r identical}
+identical(lapply, withdots(lapply))
+identical(c, withdots(c))
 ```
 
 ## Notes
 
-### A note about `primitive` functions
+### A note about primitive functions
 
 If a function is primitive (see `?primitive`) and it has `...` in its argument list (e.g., `c()`, `sum()`, `as.character()`), it is returned as is. If the primitive function does not have `...` in its argument list, an error is thrown.
 
@@ -102,7 +97,7 @@ round(45.78, digits = 1, junk, arguments)
 
 Many functions---including those created with `function()`---have a `srcref` `attribute`. When a function is `print`ed, `print.function()` relies on this `attribute` by default to depict the function's `formals` and `body`.
 
-`withdots()` adds `...` via `formals<-`, which expressly drops `attributes` (see ``?`formals<-` ``. To prevent this loss, `withdots()` sets the function's `attributes` aside at the beginning and re-attaches them to at the end. Normally, this would re-attach the original function's `srcref` `attribute` to the new function, making it so that the newly added `...` would not be depicted when the new function is `print`ed. For this reason, the old `srcref` `attribute` is dropped, and only the remaining `attributes` are re-attached to the new function.
+`withdots()` adds `...` via `formals<-`, which expressly drops `attributes` (see ``?`formals<-` ``). To prevent this loss, `withdots()` sets the function's `attributes` aside at the beginning and re-attaches them to at the end. Normally, this would re-attach the original function's `srcref` `attribute` to the new function, making it so that the newly added `...` would not be depicted when the new function is `print`ed. For this reason, the old `srcref` `attribute` is dropped, and only the remaining `attributes` are re-attached to the new function.
 
 Observe what would happen during `print`ing if **all** original `attributes` were naively added to the modified function:
 
@@ -152,7 +147,7 @@ foo(1, 2, junk, "arguments", NULL)
 # Furthermore, its important attributes are intact:
 attr(foo, "srcref") <- NULL
 foo
+
+# Success! However, the comments in the body of the function are lost.
+# Even so, this is better than inaccurate `print`ing.
 ```
-
-Success! However, the comments in the `body()` of the function are lost. Even so, this is better than inaccurate `print`ing.
-
