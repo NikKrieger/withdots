@@ -94,7 +94,7 @@ foo
 #>   # Helpful comment
 #>   a
 #> \}
-#> <environment: 0x585a538>
+#> <environment: 0x6270508>
 #> attr(,"important_attribute")
 #> [1] "crucial information"
 #> attr(,"class")
@@ -112,7 +112,7 @@ foo
 #> \{
 #>     a
 #> \}
-#> <environment: 0x585a538>
+#> <environment: 0x6270508>
 
 # Add the attributes back:
 attributes(foo) <- old_attributes
@@ -124,7 +124,7 @@ foo
 #>   # Helpful comment
 #>   a
 #> \}
-#> <environment: 0x585a538>
+#> <environment: 0x6270508>
 #> attr(,"important_attribute")
 #> [1] "crucial information"
 #> attr(,"class")
@@ -143,7 +143,7 @@ foo
 #> \{
 #>     a
 #> \}
-#> <environment: 0x585a538>
+#> <environment: 0x6270508>
 #> attr(,"important_attribute")
 #> [1] "crucial information"
 #> attr(,"class")
