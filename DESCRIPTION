@@ -1,10 +1,10 @@
 Type: Package
 Package: withdots
-Title: Put `...` in a Function's `args`
+Title: Put `...` in a Function's Argument List
 Version: 0.1.0
 Author: Nik Krieger
 Maintainer: Nik Krieger <nk@case.edu>
-Description: Adds `...` to a function's `args` so that it can tolerate
+Description: Adds `...` to a function's argument list so that it can tolerate
     non-matching arguments.
 License: MIT + file LICENSE
 Suggests:
