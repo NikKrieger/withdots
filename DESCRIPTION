@@ -1,17 +1,20 @@
 Type: Package
 Package: withdots
-Title: Put `...` in a Function's Argument List
-Version: 0.1.0.9000
-Author: Nik Krieger
-Maintainer: Nik Krieger <nk@case.edu>
-Description: Adds `...` to a function's argument list so that it can tolerate
-    non-matching arguments.
+Title: Put ... in a Function's Argument List
+Version: 0.1.0.9001
+Authors@R: 
+    person(given = c("Nikolas", "Ivan"),
+           family = "Krieger", 
+           email = "nk@case.edu",
+           role = c("aut", "cre"))
+Description: Adds ... to a function's argument list so that it can
+    tolerate non-matching arguments.
 License: MIT + file LICENSE
+URL: https://github.com/NikKrieger/withdots
+BugReports: https://github.com/NikKrieger/withdots/issues
 Suggests:
     rlang
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-URL: https://github.com/NikKrieger/withdots
-BugReports: https://github.com/NikKrieger/withdots/issues
