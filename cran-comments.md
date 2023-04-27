@@ -1,3 +1,8 @@
+
+## Resubmission
+
+Tweaked `DESCRIPTION` to remove directional quotation marks and to use `Authors@R`
+
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
