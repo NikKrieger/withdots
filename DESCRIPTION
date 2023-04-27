@@ -1,7 +1,7 @@
 Type: Package
 Package: withdots
 Title: Put ... in a Function's Argument List
-Version: 0.1.0.9001
+Version: 0.1.1
 Authors@R: 
     person(given = c("Nikolas", "Ivan"),
            family = "Krieger", 
