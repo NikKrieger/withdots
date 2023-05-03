@@ -12,7 +12,13 @@ extraneous arguments that are passed to it.
 
 ## Installation
 
-You can install the development version of withdots like so:
+You can install `withdots` from CRAN like so:
+
+``` r
+install.packages("withdots")
+```
+
+Or, you can install the development version of `withdots` like so:
 
 ``` r
 remotes::install_github("NikKrieger/withdots")
@@ -26,7 +32,7 @@ The base R function `match()` has no `...` in its argument list:
 match
 #> function (x, table, nomatch = NA_integer_, incomparables = NULL) 
 #> .Internal(match(x, table, nomatch, incomparables))
-#> <bytecode: 0x2646880>
+#> <bytecode: 0x38d5468>
 #> <environment: namespace:base>
 ```
 

@@ -1,7 +1,7 @@
 
 ## Resubmission
 
-Tweaked `DESCRIPTION` to remove directional quotation marks and to use `Authors@R`
+Improved handling of function environments.
 
 ## R CMD check results
 

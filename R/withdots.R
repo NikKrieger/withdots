@@ -11,7 +11,8 @@
 #'   `withdots()` takes **only** if `f` is a [closure] without [`...`][dots] in
 #'   its [`formals`]:
 #'
-#'   1. [`attributes`]`(f)` are temporarily saved and set aside.
+#'   1. [`environment`]`(f)` and [`attributes`]`(f)` are temporarily saved and
+#'   set aside.
 #'
 #'   1. If there is a [`srcref`] [`attribute`][attr] among the set-aside
 #'   [`attributes`]`(f)`, it is removed (see **Why the [`srcref`]
@@ -19,8 +20,8 @@
 #'
 #'   1. [`...`][dots] is added to the [`formals`] of `f` using [`formals<-`].
 #'
-#'   1. The remaining set-aside [`attributes`] are added back to `f` with
-#'   [`attributes<-`].
+#'   1. The set-aside [`environment`] and [`attributes`] are added back to `f`
+#'   with [`environment<-`] and [`attributes<-`], respectively.
 #'
 #'   1. `f` is returned.
 #'
@@ -143,11 +144,13 @@ withdots <- function(f) {
     return(f)
   }
 
+  e <- environment(f)
   a <- attributes(f)
   a[["srcref"]] <- NULL
 
   formals(f)[["..."]] <- quote(expr = )
 
+  environment(f) <- e
   attributes(f) <- a
 
   f

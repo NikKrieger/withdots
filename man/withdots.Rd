@@ -34,13 +34,14 @@ returned. See \strong{Handling of \link{primitive}s} below.
 \code{withdots()} takes \strong{only} if \code{f} is a \link{closure} without \code{\link[=dots]{...}} in
 its \code{\link{formals}}:
 \enumerate{
-\item \code{\link{attributes}}\code{(f)} are temporarily saved and set aside.
+\item \code{\link{environment}}\code{(f)} and \code{\link{attributes}}\code{(f)} are temporarily saved and
+set aside.
 \item If there is a \code{\link{srcref}} \code{\link[=attr]{attribute}} among the set-aside
 \code{\link{attributes}}\code{(f)}, it is removed (see \strong{Why the \code{\link{srcref}}
 \code{\link[=attr]{attribute}} is removed} below).
 \item \code{\link[=dots]{...}} is added to the \code{\link{formals}} of \code{f} using \code{\link{formals<-}}.
-\item The remaining set-aside \code{\link{attributes}} are added back to \code{f} with
-\code{\link{attributes<-}}.
+\item The set-aside \code{\link{environment}} and \code{\link{attributes}} are added back to \code{f}
+with \code{\link{environment<-}} and \code{\link{attributes<-}}, respectively.
 \item \code{f} is returned.
 }
 }
@@ -94,7 +95,7 @@ foo
 #>   # Helpful comment
 #>   a
 #> \}
-#> <environment: 0x571c620>
+#> <environment: 0x54f7ab0>
 #> attr(,"important_attribute")
 #> [1] "crucial information"
 #> attr(,"class")
@@ -112,7 +113,7 @@ foo
 #> \{
 #>     a
 #> \}
-#> <environment: 0x571c620>
+#> <environment: 0x54f7ab0>
 
 # Add the attributes back:
 attributes(foo) <- old_attributes
@@ -124,7 +125,7 @@ foo
 #>   # Helpful comment
 #>   a
 #> \}
-#> <environment: 0x571c620>
+#> <environment: 0x54f7ab0>
 #> attr(,"important_attribute")
 #> [1] "crucial information"
 #> attr(,"class")
@@ -143,7 +144,7 @@ foo
 #> \{
 #>     a
 #> \}
-#> <environment: 0x571c620>
+#> <environment: 0x54f7ab0>
 #> attr(,"important_attribute")
 #> [1] "crucial information"
 #> attr(,"class")

@@ -22,7 +22,13 @@ The `withdots()` function adds `...` to the argument list of a function if it do
 
 ## Installation
 
-You can install the development version of withdots like so:
+You can install `withdots` from CRAN like so:
+
+``` r
+install.packages("withdots")
+```
+
+Or, you can install the development version of `withdots` like so:
 
 ``` r
 remotes::install_github("NikKrieger/withdots")
